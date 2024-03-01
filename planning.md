@@ -170,6 +170,8 @@ Similarity output is the cosine similarity of the actual value vector and the gu
             }
             guessed.add(guess);
 
-            const newEntry = [similarity, guess, percentile, guessCount,...
+            const newEntry = [similarity, guess, percentile, guessCount,...]
+        
+        ...
 ```
 This means we need to store the actual value to calculate the similarity scores :l
