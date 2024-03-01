@@ -2,7 +2,16 @@ import pandas as pd
 import requests
 
 
-semantleStarterRequest = 'https://semantle.com/model2/bread/'
+
+def getBaseUrl() : 
+    return 'https://semantle.com/'
+
+def getVectorUrl(wordGuess : str, actualWord : str) : # word guess
+    return getBaseUrl() + 'model2/' + actualWord + '/' + wordGuess
+
+def getActualUrl(actualWord : str) :
+    return getVectorUrl(actualWord, actualWord)
+
 urlRequest = semantleStarterRequest + 'plane'
 
 
@@ -12,4 +21,7 @@ print(initialJson,'\n\n\n\n')
 
 testRequest = pd.DataFrame(initialJson)
 
-print(testRequest.tail())
+print(testRequest)
+
+# print('sum\t', sum((testRequest.values)))
+print()

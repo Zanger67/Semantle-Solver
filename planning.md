@@ -74,3 +74,102 @@ Method                          | Description
 `post(url, data, json, args)`   | Sends a POST request to the specified url
 `put(url, data, args)`          | Sends a PUT request to the specified url
 `request(method, url, args)`    | Sends a request of the specified method to the specified url
+
+
+
+
+- since the URL to retrieve the vector file is based off of the target SECRET word, we must query it at least one initially to get the secret word and just not use it...
+
+
+
+
+
+
+
+
+
+# Sections of website code:
+
+```js
+// line 224) in function guessRow(similarity, oldGuess, percentile, guessNumber, guess, player, isLocal = true) {
+
+    let guessType = percentile === 1000 ? 'word-found' : 'word-cold';
+    guessType = percentile < 1000 ? 'word-close' : guessType;
+    guessType = percentile < 500 ? 'word-fire' : guessType;
+    guessType = percentile < 250 ? 'word-glass' : guessType;
+    guessType = percentile < 1 && similarity >= 20 ? 'word-glass' : guessType;
+    guessType = percentile < 1 && similarity < 20 ? 'word-cold' : guessType;
+```
+
+
+```js
+// line 1009 --> updateGuesses() --> calls guessRow and holds percentiles
+for (let entry of guesses) {
+    let [similarity, oldGuess, percentile, guessNumber, player, localGuess] = entry;
+    if (oldGuess === latestGuess) {
+        inner += guessRow(similarity, oldGuess, percentile, guessNumber, latestGuess, player, localGuess);
+    }
+}
+```
+
+
+```js
+// line 669 --> doGuess function
+const guessData = await getModel(guess);
+if (!guessData) {
+    $('#error').textContent = `I don't know the word ${guess}.`;
+    return false;
+}
+
+
+// line 474 async function --> getModel --> calling the website we noted
+async function getModel(word) {
+    if (cache.hasOwnProperty(word)) {
+        return cache[word];
+    }
+    const url = "/model2/" + secret + "/" + word.replace(/\ /gi, "_");
+    const response = await fetch(baseUrl + url);
+    try {
+        const result = await response.json();
+        if (result) {
+            cache[guess] = result;
+        }
+        return result;
+    } catch (e) {
+        return null;
+    }
+}
+/* 
+ * CONST URL --> retrieves the url where the first is the target value itself
+ * value 2 is the guess
+ * Thus the output json file is a file that is catered specifically remotely for this case
+ */
+
+// specifically found in this line:
+    const url = "/model2/" + secret + "/" + word.replace(/\ /gi, "_");
+
+```
+
+
+
+
+Similarity output is the cosine similarity of the actual value vector and the guess
+> *note that we also take the percentile value or 0 --> top 1000 values?*
+
+```js
+// Line 672 ish
+
+        let percentile = guessData.percentile || 0;
+
+        const guessVec = guessData.vec;
+
+        let similarity = getCosSim(guessVec, secretVec) * 100.0;
+        if (!guessed.has(guess)) {
+            if (!gameOver) {
+                guessCount += 1;
+            }
+            guessed.add(guess);
+
+            const newEntry = [similarity, guess, percentile, guessCount,...
+```
+This means we need to store the actual value to calculate the similarity scores :l
