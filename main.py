@@ -56,13 +56,16 @@ def printPreviousGuesses() :
           '|||||   Previous Guesses   |||||\n',
           '================================')
     
+    global maxLenGuess
+    guessLen = maxLenGuess + 1
+
     print('{0:>10}'.format('Guess No.'),
-          '{0:<15}'.format('Guess'),
+          ('{0:<' + str(guessLen) + '}').format('Guess'),
           '{}'.format('Similarity'))
     for guess in previousCases :
         # print(previousCases[guess])
         print('{0:>9}'.format(previousCases[guess][0]) + '.',
-              '{0:<15}'.format(guess),
+              ('{0:<' + str(guessLen) + '}').format(guess),
               previousCases[guess][1])
         # print(f'{previousCases[guess][0]:>3}. {guess:>15} {previousCases[guess][1]}')
         # print(guess, ' : ', previousCases[guess])
@@ -134,7 +137,7 @@ def getCurrentAnswerWord(dayModifier: int) -> str:
 previousCases = {}
 dayModifier = 0
 guessNo = 0
-maxLenGuess = 0
+maxLenGuess = len('Guess ')
 
 
 print('This program will proceed with the OFFICIAL word of the day unless otherwise specified', '\n',
