@@ -11,7 +11,7 @@ from datetime import date, datetime
 
 SECRET_WORD_URL = 'https://semantle.com/assets/js/secretWords.js'
 BASEURL = 'https://semantle.com/'
-
+ORDER_BY_SIMILARITY = True # true if print prev guesses by sim otherwise print by guess no.
 
 
 
@@ -51,6 +51,9 @@ def decimalToPercentage(decimal : float) -> str :
 
 
 def printPreviousGuesses() :
+    global ORDER_BY_SIMILARITY
+    prevCaseToUse = previousCasesRanked if ORDER_BY_SIMILARITY else previousCases
+
     print('\n\n',
           '================================\n',
           '|||||   Previous Guesses   |||||\n',
@@ -59,16 +62,23 @@ def printPreviousGuesses() :
     global maxLenGuess
     guessLen = maxLenGuess + 1
 
-    print('{0:>10}'.format('Guess No.'),
-          ('{0:<' + str(guessLen) + '}').format('Guess'),
-          '{}'.format('Similarity'))
-    for guess in previousCases :
-        # print(previousCases[guess])
-        print('{0:>9}'.format(previousCases[guess][0]) + '.',
-              ('{0:<' + str(guessLen) + '}').format(guess),
-              previousCases[guess][1])
-        # print(f'{previousCases[guess][0]:>3}. {guess:>15} {previousCases[guess][1]}')
-        # print(guess, ' : ', previousCases[guess])
+    stringFormats = {'guessNo' : '{0:>10}',
+                     'guess' : ('{0:<' + str(guessLen) + '}'),
+                     'similarity' : '{}'}
+
+    print(stringFormats['guessNo'].format('Guess No.'),
+          stringFormats['guess'].format('Guess'),
+          'Similarity')
+    
+    # print(prevCaseToUse.keys())
+    # print(prevCaseToUse)
+    
+    for key in reversed(sorted(prevCaseToUse.keys())) :
+        print(stringFormats['guessNo'].format((str(prevCaseToUse[key][0]) + '.')),
+              stringFormats['guess'].format(prevCaseToUse[key][3]),
+              prevCaseToUse[key][1])
+        # print(f'{prevCaseToUse[guess][0]:>3}. {guess:>15} {prevCaseToUse[guess][1]}')
+        # print(guess, ' : ', prevCaseToUse[guess])
 
 
 def makeGuess(guess : str) :
@@ -88,9 +98,10 @@ def makeGuess(guess : str) :
     if not cosinSim == -2.0 :
         global guessNo
         guessNo += 1
-        previousCases[guess] = (guessNo, decimalToPercentage(cosinSim), cosinSim)
+        previousCases[guess] = (guessNo, decimalToPercentage(cosinSim), cosinSim, guess)
+        previousCasesRanked[cosinSim] = previousCases[guess]
     else :
-        previousCases[guess] = ('-', decimalToPercentage(cosinSim), cosinSim)
+        previousCases[guess] = ('-', decimalToPercentage(cosinSim), cosinSim, guess)
 
     printPreviousGuesses()
     print(f'\n\n{guess}:\t', previousCases[guess][1])
@@ -134,10 +145,13 @@ def getCurrentAnswerWord(dayModifier: int) -> str:
 # ||||||   Main Program   ||||||
 # ==============================
 
+
 previousCases = {}
+previousCasesRanked = {}
 dayModifier = 0
 guessNo = 0
 maxLenGuess = len('Guess ')
+
 
 
 print('This program will proceed with the OFFICIAL word of the day unless otherwise specified', '\n',
@@ -180,3 +194,4 @@ while True :
     guess = str(input('\nEnter your guess: '))
     if guess.lower() == '-exit' :
         break
+
