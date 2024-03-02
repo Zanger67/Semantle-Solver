@@ -173,3 +173,20 @@ Similarity output is the cosine similarity of the actual value vector and the gu
             const newEntry = [similarity, guess, percentile, guessCount,...
 ```
 This means we need to store the actual value to calculate the similarity scores :l
+
+
+
+
+
+
+```js
+//line 43 gets secret word
+function getSecretWord(day) {
+    let pn = getWordIndex(getPuzzleNumber(day));
+    return secretWords[pn];
+}
+
+
+// selects word line 83
+let ptoday = queryPuzzleDay ? Number(queryPuzzleDay) + initialDay : (puzzleDay ? Number(puzzleDay) : today);
+```
