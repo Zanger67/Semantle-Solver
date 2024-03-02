@@ -1,3 +1,5 @@
+```js
+
 /*
     Copyright (c) 2022, David Turner <novalis@novalis.org>
 
@@ -1790,3 +1792,9 @@ const isBonusComplete = () => {
 }
 
 window["SemantleGame"] = SemantleGame;
+
+
+
+
+
+```
