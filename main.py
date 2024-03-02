@@ -33,15 +33,18 @@ def cosineSimilarityMath(vec1, vec2) -> float:
 
 def getCosineSimilarity(wordGuess : str, actualWord : str) -> float:
     if wordGuess in previousCases :
-        return previousCases[wordGuess]
+        return previousCases[wordGuess][2]
+        # return previousCases[wordGuess]
     
     try :
         guessJson = requests.get(getVectorUrl(wordGuess, actualWord)).json()
-        previousCases[wordGuess] = cosineSimilarityMath(guessJson['vec'], ACTUAL_JSON['vec'])
+        # previousCases[wordGuess] = cosineSimilarityMath(guessJson['vec'], ACTUAL_JSON['vec'])
+        return cosineSimilarityMath(guessJson['vec'], ACTUAL_JSON['vec'])
     except :
-        previousCases[wordGuess] = -2.0
+        return -2.0
+        # previousCases[wordGuess] = -2.0
 
-    return previousCases[wordGuess]
+    # return previousCases[wordGuess]
 
 def decimalToPercentage(decimal : float) -> str : 
     if (decimal == -2.0) :
@@ -51,6 +54,7 @@ def decimalToPercentage(decimal : float) -> str :
 
 
 def printPreviousGuesses() :
+    # establishes which dict to use dep if we want to order by similarity or guess no.
     global ORDER_BY_SIMILARITY
     prevCaseToUse = previousCasesRanked if ORDER_BY_SIMILARITY else previousCases
 
@@ -70,19 +74,24 @@ def printPreviousGuesses() :
           stringFormats['guess'].format('Guess'),
           'Similarity')
     
-    # print(prevCaseToUse.keys())
+    keys = reversed(sorted(prevCaseToUse.keys())) if ORDER_BY_SIMILARITY else prevCaseToUse.keys()
+    # print(keys)
     # print(prevCaseToUse)
-    
-    for key in reversed(sorted(prevCaseToUse.keys())) :
+    for key in keys :
         print(stringFormats['guessNo'].format((str(prevCaseToUse[key][0]) + '.')),
               stringFormats['guess'].format(prevCaseToUse[key][3]),
               prevCaseToUse[key][1])
-        # print(f'{prevCaseToUse[guess][0]:>3}. {guess:>15} {prevCaseToUse[guess][1]}')
-        # print(guess, ' : ', prevCaseToUse[guess])
+    
+    for key in previousCasesUnknown.keys() :
+        print(stringFormats['guessNo'].format((str(previousCasesUnknown[key][0]) + '.')),
+            stringFormats['guess'].format(previousCasesUnknown[key][3]),
+            previousCasesUnknown[key][1])
 
 
 def makeGuess(guess : str) :
     global perviousCases
+    global previousCasesRanked
+    global previousCasesUnknown
     guess = guess.lower()
 
     if (guess in previousCases) :
@@ -95,18 +104,22 @@ def makeGuess(guess : str) :
 
     cosinSim = getCosineSimilarity(guess, TODAYS_WORD)
 
+    thisResult = None
+
     if not cosinSim == -2.0 :
         global guessNo
         guessNo += 1
-        previousCases[guess] = (guessNo, decimalToPercentage(cosinSim), cosinSim, guess)
-        previousCasesRanked[cosinSim] = previousCases[guess]
+        thisResult = (guessNo, decimalToPercentage(cosinSim), cosinSim, guess)
+        previousCases[guess] = thisResult
+        previousCasesRanked[cosinSim] = thisResult
     else :
-        previousCases[guess] = ('-', decimalToPercentage(cosinSim), cosinSim, guess)
+        thisResult = ('-', decimalToPercentage(cosinSim), cosinSim, guess)
+        previousCasesUnknown[guess] = thisResult
 
     printPreviousGuesses()
-    print(f'\n\n{guess}:\t', previousCases[guess][1])
+    print(f'\n\n{guess}:\t', thisResult[1])
 
-    if previousCases[guess][2] == 1.0 :
+    if thisResult[2] == 1.0 :
         print('\n\nYou Win!')
         quit()
     
@@ -148,6 +161,7 @@ def getCurrentAnswerWord(dayModifier: int) -> str:
 
 previousCases = {}
 previousCasesRanked = {}
+previousCasesUnknown = {}
 dayModifier = 0
 guessNo = 0
 maxLenGuess = len('Guess ')
