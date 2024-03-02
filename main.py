@@ -56,15 +56,31 @@ def decimalToPercentage(decimal : float) -> str :
 def printPreviousGuesses() :
     # establishes which dict to use dep if we want to order by similarity or guess no.
     global ORDER_BY_SIMILARITY
+    global previousCasesUnknown
+    global maxLenGuess
+
     prevCaseToUse = previousCasesRanked if ORDER_BY_SIMILARITY else previousCases
+    
+    guessLen = maxLenGuess + 1
+    guessLen += guessLen % 2 # make even to balance 'Previous Guesses' left and right balance
+    similarityLen = len('similarity') if len(previousCasesUnknown) == 0 else len('Unknown Word')
+
+    # len of all 3 columns together
+    allColsWidth = (10                    # guessNo
+                    + guessLen            # maxGuess size
+                    + similarityLen       # similarity size will be this since 
+                    + 1) # offset space   # max of percent is 100.00% aka len=7
 
     print('\n\n',
-          '================================\n',
-          '|||||   Previous Guesses   |||||\n',
-          '================================')
+          ('{0:=<' + str(allColsWidth) + '}').format(''), '\n',
+          '|||||', ('{0:^' + str(allColsWidth - 2 * len('|||||') - 2) + '}').format('Previous Guesses'), '|||||', '\n',
+          ('{0:=<' + str(allColsWidth) + '}').format(''))
     
-    global maxLenGuess
-    guessLen = maxLenGuess + 1
+    
+    # print('\n\n',
+    #       '================================', '\n',
+    #       '|||||   Previous Guesses   |||||', '\n',
+    #       '================================')
 
     stringFormats = {'guessNo' : '{0:>10}',
                      'guess' : ('{0:<' + str(guessLen) + '}'),
@@ -75,8 +91,7 @@ def printPreviousGuesses() :
           'Similarity')
     
     keys = reversed(sorted(prevCaseToUse.keys())) if ORDER_BY_SIMILARITY else prevCaseToUse.keys()
-    # print(keys)
-    # print(prevCaseToUse)
+    
     for key in keys :
         print(stringFormats['guessNo'].format((str(prevCaseToUse[key][0]) + '.')),
               stringFormats['guess'].format(prevCaseToUse[key][3]),
@@ -87,14 +102,15 @@ def printPreviousGuesses() :
             stringFormats['guess'].format(previousCasesUnknown[key][3]),
             previousCasesUnknown[key][1])
 
-
 def makeGuess(guess : str) :
     global perviousCases
     global previousCasesRanked
     global previousCasesUnknown
     guess = guess.lower()
 
-    if (guess in previousCases) :
+    if (guess in previousCases 
+        or guess in previousCasesUnknown) :
+
         print('Already guessed this guess.')
         print('Cosine Similarity:\t', previousCases[guess][1],'\n\n\n')
         return
@@ -117,7 +133,8 @@ def makeGuess(guess : str) :
         previousCasesUnknown[guess] = thisResult
 
     printPreviousGuesses()
-    print(f'\n\n{guess}:\t', thisResult[1])
+    allColsWidth = 10 + 4 + (maxLenGuess + (maxLenGuess + 1) % 2)
+    print(('{0:<' + str(allColsWidth) + '}').format(f'\n\n{guessNo}. {guess}:'), thisResult[1])
 
     if thisResult[2] == 1.0 :
         print('\n\nYou Win!')
