@@ -3,7 +3,22 @@ import requests
 import numpy as np
 from datetime import date, datetime
 
+
+
+# ===============================
+# ||||||   SET CONSTANTS   ||||||
+# ===============================
+
+SECRET_WORD_URL = 'https://semantle.com/assets/js/secretWords.js'
 BASEURL = 'https://semantle.com/'
+
+
+
+
+
+# ===============================
+# ||||||  Program Helpers  ||||||
+# ===============================
 
 def getVectorUrl(wordGuess : str, actualWord : str) -> str: # word guess
     return BASEURL + 'model2/' + actualWord + '/' + wordGuess
@@ -30,7 +45,7 @@ def getCosineSimilarity(wordGuess : str, actualWord : str) -> float:
 
 def decimalToPercentage(decimal : float) -> str : 
     if (decimal == -2.0) :
-        return '???'
+        return 'Unknown Word'
     
     return str(round(decimal * 100, 2)) + '%'
 
@@ -55,6 +70,8 @@ def printPreviousGuesses() :
 
 def makeGuess(guess : str) :
     global perviousCases
+    guess = guess.lower()
+
     if (guess in previousCases) :
         print('Already guessed this guess.')
         print('Cosine Similarity:\t', previousCases[guess][1],'\n\n\n')
@@ -74,6 +91,10 @@ def makeGuess(guess : str) :
 
     printPreviousGuesses()
     print(f'\n\n{guess}:\t', previousCases[guess][1])
+
+    if previousCases[guess][2] == 1.0 :
+        print('\n\nYou Win!')
+        quit()
     
 def getCurrentDay() -> int:
     currDay = (date.today() - date(2022,1,29)).days
@@ -86,8 +107,8 @@ def getCurrentDay() -> int:
 
     return currDay
 
-def getCurrentAnswerWord() -> str:
-    secretWords = requests.get('https://semantle.com/assets/js/secretWords.js')
+def getCurrentAnswerWord(dayModifier: int) -> str:
+    secretWords = requests.get(SECRET_WORD_URL)
     secretWords = secretWords.text
     secretWords = secretWords[secretWords.find('[') + 1 : secretWords.find(']')]
 
@@ -100,58 +121,59 @@ def getCurrentAnswerWord() -> str:
 
     # print(secretWords)
 
-    currDay = getCurrentDay()
+    currDay = getCurrentDay() + dayModifier
 
     return secretWords[currDay % len(secretWords)]
 
 
 
-# ===========================
-# ||||||   Constants   ||||||
-# ===========================
+# ==============================
+# ||||||   Main Program   ||||||
+# ==============================
 
-
-# print('days:', (date.today() - date(2022,1,30)).days)
-# print(getCurrentDay())
-
-# print(getCurrentAnswerWord())
-
-
-
-
-
-# ==========================
-# |||||| Main Program ||||||
-# ==========================
-
-# TODAYS_WORD = str(input('Enter the actual word: '))
-TODAYS_WORD = getCurrentAnswerWord()
-
-ACTUAL_URL = getActualUrl(TODAYS_WORD)
-ACTUAL_JSON = requests.get(ACTUAL_URL).json()
 previousCases = {}
+dayModifier = 0
 guessNo = 0
 maxLenGuess = 0
 
 
+print('This program will proceed with the OFFICIAL word of the day unless otherwise specified', '\n',
+      '- Enter \'-EXIT\' to exit the program at any time', '\n',
+      '- Enter \'-ADJUSTDAY\' to be prompted to change the day', '\n',
+      '- Enter \'-VIEWANSWER\' to see the today\'s word', '\n\n',
+      'Otherwise, begin entering guesses...')
+
+
+guess = str(input())
+if guess.upper() == '-EXIT' :
+    quit()
+elif guess.upper() == '-ADJUSTDAY' : # pos values for future, neg values for past
+    dayModifier = int(input('Enter how many days to adjust by (+future, -past): '))
+
+    print(f'\n\nAdjustment has been made by {dayModifier} days.',
+          'Proceed with guessing or enter \'-VIEWANSWER\'\n\n')
+    
+    guess = str(input())
+
+
+
+# TODAYS_WORD = str(input('Enter the actual word: '))
+TODAYS_WORD = getCurrentAnswerWord(dayModifier)
+ACTUAL_URL = getActualUrl(TODAYS_WORD)
+ACTUAL_JSON = requests.get(ACTUAL_URL).json()
+
+
+
+if guess.upper() == '-VIEWANSWER' :
+    print('\n\n', 'Answer for ', date.today(), ':\t', TODAYS_WORD)
+    quit()
+    
+
+
+
+# Program loop to play
 while True :
-    guess = str(input('Enter your guess: '))
-    if guess == 'exit' :
-        break
-
     makeGuess(guess)
-
-
-
-
-
-# initialJson = requests.get(urlRequest).json()
-
-# print(initialJson,'\n\n\n\n')
-
-# testRequest = pd.DataFrame(initialJson)
-
-# print(testRequest)
-
-# # print('sum\t', sum((testRequest.values)))
-# print()
+    guess = str(input('\nEnter your guess: '))
+    if guess.lower() == '-exit' :
+        break
