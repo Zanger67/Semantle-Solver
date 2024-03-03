@@ -23,17 +23,12 @@ elif guess.upper() == '-ADJUSTDAY' : # pos values for future, neg values for pas
           'Proceed with guessing or enter \'-VIEWANSWER\'\n\n')
     
     sem = semantle.semantleAccess(dayModifier)
-    
     guess = str(input())
-
-
-
 
 
 if guess.upper() == '-VIEWANSWER' :
     print('\n\n', 'Answer for ', date.today(), ':\t', sem.TODAYS_WORD)
     quit()
-   
 
 
 # Program loop to play

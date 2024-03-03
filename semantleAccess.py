@@ -25,8 +25,8 @@ class semantleAccess :
 
     def __init__(self, dayModifier: int) -> None:
         self.pingSemantle = networkRequest(dayModifier)
-        self.TODAYS_WORD = self.pingSemantle.getCurrentAnswerWord()
-        self.TODAYS_JSON = self.pingSemantle.getTodaysJson()
+        self.TODAYS_WORD  = self.pingSemantle.getCurrentAnswerWord()
+        self.TODAYS_JSON  = self.pingSemantle.getTodaysJson()
 
     # ===============================
     # ||||||  Program Helpers  ||||||
@@ -53,11 +53,13 @@ class semantleAccess :
 
     def printPreviousGuesses(self) :
         # establishes which dict to use dep if we want to order by similarity or guess no.
-        self.prevCaseToUse = self.previousCasesRanked if self.ORDER_BY_SIMILARITY else self.previousCases
+        self.prevCaseToUse = self.previousCasesRanked if self.ORDER_BY_SIMILARITY \
+                                                      else self.previousCases
         
         guessLen = self.maxLenGuess + 1
         guessLen += guessLen % 2 # make even to balance 'Previous Guesses' left and right balance
-        similarityLen = len('similarity') if len(self.previousCasesUnknown) == 0 else len('Unknown Word')
+        similarityLen = len('similarity') if len(self.previousCasesUnknown) == 0 \
+                                          else len('Unknown Word')
 
         # len of all 3 columns together
         allColsWidth = (10                    # guessNo
@@ -70,32 +72,34 @@ class semantleAccess :
             '|||||', ('{0:^' + str(allColsWidth - 2 * len('|||||') - 2) + '}').format('Previous Guesses'), '|||||', '\n',
             ('{0:=<' + str(allColsWidth) + '}').format(''))
         
-
-        stringFormats = {'guessNo' : '{0:>10}',
-                        'guess' : ('{0:<' + str(guessLen) + '}'),
-                        'similarity' : '{}'}
+        stringFormats = {
+            'guessNo' : '{0:>10}',
+            'guess' : ('{0:<' + str(guessLen) + '}'),
+            'similarity' : '{}'
+        }
 
         print(stringFormats['guessNo'].format('Guess No.'),
-            stringFormats['guess'].format('Guess'),
-            'Similarity')
+              stringFormats['guess'].format('Guess'),
+              'Similarity')
         
-        keys = reversed(sorted(self.prevCaseToUse.keys())) if self.ORDER_BY_SIMILARITY else self.prevCaseToUse.keys()
+        keys = reversed(sorted(self.prevCaseToUse.keys())) if self.ORDER_BY_SIMILARITY \
+                                                           else self.prevCaseToUse.keys()
         
         for key in keys :
             print(stringFormats['guessNo'].format((str(self.prevCaseToUse[key][0]) + '.')),
-                stringFormats['guess'].format(self.prevCaseToUse[key][3]),
-                self.prevCaseToUse[key][1])
+                  stringFormats['guess'].format(self.prevCaseToUse[key][3]),
+                  self.prevCaseToUse[key][1])
         
         for key in self.previousCasesUnknown.keys() :
             print(stringFormats['guessNo'].format((str(self.previousCasesUnknown[key][0]) + '.')),
-                stringFormats['guess'].format(self.previousCasesUnknown[key][3]),
-                self.previousCasesUnknown[key][1])
+                  stringFormats['guess'].format(self.previousCasesUnknown[key][3]),
+                  self.previousCasesUnknown[key][1])
 
     def makeGuess(self, guess : str) -> bool :
         guess = guess.lower()
 
-        if (guess in self.previousCases 
-            or guess in self.previousCasesUnknown) :
+        if (guess in self.previousCases or 
+            guess in self.previousCasesUnknown) :
 
             print('Already guessed this guess.')
             print('Cosine Similarity:\t', self.previousCases[guess][1],'\n\n\n')
@@ -103,7 +107,7 @@ class semantleAccess :
         
         self.maxLenGuess = max(len(guess), self.maxLenGuess)
 
-        cosinSim = round(self.getCosineSimilarity(guess, self.TODAYS_WORD),4)
+        cosinSim = round(self.getCosineSimilarity(guess, self.TODAYS_WORD), 4)
 
         thisResult = None
 
