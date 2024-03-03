@@ -5,12 +5,9 @@ from datetime import date, datetime
 
 
 class semantleAccess :
-    def __init__(self, dayModifier: int) -> None:
-        self.TODAYS_WORD = self.getCurrentAnswerWord(dayModifier)
-        self.ACTUAL_URL = self.getActualUrl(self.TODAYS_WORD)
-        self.ACTUAL_JSON = requests.get(self.ACTUAL_URL).json()
-
-
+    # ===============================
+    # |||||| Helpers Variables ||||||
+    # ===============================
 
     SECRET_WORD_URL = 'https://semantle.com/assets/js/secretWords.js'
     BASEURL = 'https://semantle.com/'
@@ -23,6 +20,15 @@ class semantleAccess :
     guessNo = 0
     maxLenGuess = len('Guess ')
 
+
+    # ================================
+    # ||||||   Initialization   ||||||
+    # ================================
+
+    def __init__(self, dayModifier: int) -> None:
+        self.TODAYS_WORD = self.getCurrentAnswerWord(dayModifier)
+        self.ACTUAL_URL = self.getActualUrl(self.TODAYS_WORD)
+        self.ACTUAL_JSON = requests.get(self.ACTUAL_URL).json()
 
 
     # ===============================
@@ -43,18 +49,12 @@ class semantleAccess :
     def getCosineSimilarity(self, wordGuess : str, actualWord : str) -> float:
         if wordGuess in self.previousCases :
             return self.previousCases[wordGuess][2]
-            # return previousCases[wordGuess]
+        
         try :
             guessJson = requests.get(self.getVectorUrl(wordGuess, actualWord)).json()
-            # print(self.ACTUAL_JSON['vec'])
-            # print(guessJson['vec'])
-            # print(self.cosineSimilarityMath(guessJson['vec'], self.ACTUAL_JSON['vec']))
-            # previousCases[wordGuess] = cosineSimilarityMath(guessJson['vec'], ACTUAL_JSON['vec'])
             return self.cosineSimilarityMath(guessJson['vec'], self.ACTUAL_JSON['vec'])
         except :
             return -2.0
-            # previousCases[wordGuess] = -2.0
-        # return previousCases[wordGuess]
 
     def decimalToPercentage(self, decimal : float) -> str : 
         if (decimal == -2.0) :
@@ -65,10 +65,6 @@ class semantleAccess :
 
     def printPreviousGuesses(self) :
         # establishes which dict to use dep if we want to order by similarity or guess no.
-        # global ORDER_BY_SIMILARITY
-        # global previousCasesUnknown
-        # global maxLenGuess
-
         self.prevCaseToUse = self.previousCasesRanked if self.ORDER_BY_SIMILARITY else self.previousCases
         
         guessLen = self.maxLenGuess + 1
@@ -86,11 +82,6 @@ class semantleAccess :
             '|||||', ('{0:^' + str(allColsWidth - 2 * len('|||||') - 2) + '}').format('Previous Guesses'), '|||||', '\n',
             ('{0:=<' + str(allColsWidth) + '}').format(''))
         
-        
-        # print('\n\n',
-        #       '================================', '\n',
-        #       '|||||   Previous Guesses   |||||', '\n',
-        #       '================================')
 
         stringFormats = {'guessNo' : '{0:>10}',
                         'guess' : ('{0:<' + str(guessLen) + '}'),
@@ -112,10 +103,7 @@ class semantleAccess :
                 stringFormats['guess'].format(self.previousCasesUnknown[key][3]),
                 self.previousCasesUnknown[key][1])
 
-    def makeGuess(self, guess : str) :
-        # global perviousCases
-        # global previousCasesRanked
-        # global previousCasesUnknown
+    def makeGuess(self, guess : str) -> bool :
         guess = guess.lower()
 
         if (guess in self.previousCases 
@@ -125,15 +113,13 @@ class semantleAccess :
             print('Cosine Similarity:\t', self.previousCases[guess][1],'\n\n\n')
             return
         
-        # global maxLenGuess
         self.maxLenGuess = max(len(guess), self.maxLenGuess)
 
-        cosinSim = self.getCosineSimilarity(guess, self.TODAYS_WORD)
+        cosinSim = round(self.getCosineSimilarity(guess, self.TODAYS_WORD),4)
 
         thisResult = None
 
         if not cosinSim == -2.0 :
-            # global guessNo
             self.guessNo += 1
             thisResult = (self.guessNo, self.decimalToPercentage(cosinSim), cosinSim, guess)
             self.previousCases[guess] = thisResult
@@ -148,13 +134,12 @@ class semantleAccess :
 
         if thisResult[2] == 1.0 :
             print('\n\nYou Win!')
-            quit()
+            return True
+            # quit()
+        return False
         
     def getCurrentDay(self) -> int:
         currDay = (date.today() - date(2022,1,29)).days
-
-        # print(datetime.now().strftime('%H'))
-        # print('hour: ', datetime.now().strftime('%H'), type(datetime.now().strftime('%H')))
         
         if (int(datetime.now().strftime('%H')) >= 19) : # puzzle changes at 19h00
             currDay += 1
@@ -172,8 +157,6 @@ class semantleAccess :
 
         self.secretWords = self.secretWords.split(',')
         self.secretWords = self.secretWords[:-1] # remove blank string case
-
-        # print(secretWords)
 
         currDay = self.getCurrentDay() + dayModifier
 

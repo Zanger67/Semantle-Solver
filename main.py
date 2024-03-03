@@ -41,8 +41,10 @@ if guess.upper() == '-VIEWANSWER' :
 
 # Program loop to play
 while True :
-    sem.makeGuess(guess)
+    if (sem.makeGuess(guess)) :
+        break
     guess = str(input('\nEnter your guess: '))
     if guess.lower() == '-exit' :
         break
 
+quit()
