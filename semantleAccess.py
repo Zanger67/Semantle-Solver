@@ -1,7 +1,7 @@
 import pandas as pd
 import requests
 import numpy as np
-from datetime import date, datetime
+from networkRequest import networkRequest
 
 
 class semantleAccess :
@@ -9,9 +9,8 @@ class semantleAccess :
     # |||||| Helpers Variables ||||||
     # ===============================
 
-    SECRET_WORD_URL = 'https://semantle.com/assets/js/secretWords.js'
-    BASEURL = 'https://semantle.com/'
-    ORDER_BY_SIMILARITY = True # true if print prev guesses by sim otherwise print by guess no.
+    # true if print prev guesses by sim otherwise print by guess no.
+    ORDER_BY_SIMILARITY = True
 
     previousCases = {}
     previousCasesRanked = {}
@@ -20,28 +19,18 @@ class semantleAccess :
     guessNo = 0
     maxLenGuess = len('Guess ')
 
-
     # ================================
     # ||||||   Initialization   ||||||
     # ================================
 
     def __init__(self, dayModifier: int) -> None:
-        self.TODAYS_WORD = self.getCurrentAnswerWord(dayModifier)
-        self.ACTUAL_URL = self.getActualUrl(self.TODAYS_WORD)
-        self.ACTUAL_JSON = requests.get(self.ACTUAL_URL).json()
-
+        self.pingSemantle = networkRequest(dayModifier)
+        self.TODAYS_WORD = self.pingSemantle.getCurrentAnswerWord()
+        self.TODAYS_JSON = self.pingSemantle.getTodaysJson()
 
     # ===============================
     # ||||||  Program Helpers  ||||||
     # ===============================
-
-    def getVectorUrl(self, wordGuess : str, actualWord : str) -> str: # word guess
-        return self.BASEURL + 'model2/' + actualWord + '/' + wordGuess
-
-    def getActualUrl(self, actualWord : str) -> str: # actual word to comapare
-        ACTUAL_URL = self.getVectorUrl(actualWord, actualWord)
-
-        return ACTUAL_URL
 
     def cosineSimilarityMath(self, vec1, vec2) -> float:
         return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
@@ -51,8 +40,8 @@ class semantleAccess :
             return self.previousCases[wordGuess][2]
         
         try :
-            guessJson = requests.get(self.getVectorUrl(wordGuess, actualWord)).json()
-            return self.cosineSimilarityMath(guessJson['vec'], self.ACTUAL_JSON['vec'])
+            guessJson = self.pingSemantle.getJson(wordGuess)
+            return self.cosineSimilarityMath(guessJson['vec'], self.TODAYS_JSON['vec'])
         except :
             return -2.0
 
@@ -61,7 +50,6 @@ class semantleAccess :
             return 'Unknown Word'
         
         return str(round(decimal * 100, 2)) + '%'
-
 
     def printPreviousGuesses(self) :
         # establishes which dict to use dep if we want to order by similarity or guess no.
@@ -111,7 +99,7 @@ class semantleAccess :
 
             print('Already guessed this guess.')
             print('Cosine Similarity:\t', self.previousCases[guess][1],'\n\n\n')
-            return
+            return False
         
         self.maxLenGuess = max(len(guess), self.maxLenGuess)
 
@@ -130,35 +118,10 @@ class semantleAccess :
 
         self.printPreviousGuesses()
         allColsWidth = 10 + 4 + (self.maxLenGuess + (self.maxLenGuess + 1) % 2)
-        print(('{0:<' + str(allColsWidth) + '}').format(f'\n\n{self.guessNo}. {guess}:'), thisResult[1])
+        print(('{0:<' + str(allColsWidth) + '}').format(f'\n\n{thisResult[0]}. {guess}:'), thisResult[1])
 
         if thisResult[2] == 1.0 :
             print('\n\nYou Win!')
             return True
-            # quit()
         return False
         
-    def getCurrentDay(self) -> int:
-        currDay = (date.today() - date(2022,1,29)).days
-        
-        if (int(datetime.now().strftime('%H')) >= 19) : # puzzle changes at 19h00
-            currDay += 1
-
-        return currDay
-
-    def getCurrentAnswerWord(self, dayModifier: int) -> str:
-        self.secretWords = requests.get(self.SECRET_WORD_URL)
-        self.secretWords = self.secretWords.text
-        self.secretWords = self.secretWords[self.secretWords.find('[') + 1 : self.secretWords.find(']')]
-
-        removeChars = ['\"', ' ', '\n']
-        for i in removeChars :
-            self.secretWords = self.secretWords.replace(i, '')
-
-        self.secretWords = self.secretWords.split(',')
-        self.secretWords = self.secretWords[:-1] # remove blank string case
-
-        currDay = self.getCurrentDay() + dayModifier
-
-        return self.secretWords[currDay % len(self.secretWords)]
-

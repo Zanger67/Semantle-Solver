@@ -28,9 +28,6 @@ elif guess.upper() == '-ADJUSTDAY' : # pos values for future, neg values for pas
 
 
 
-# TODAYS_WORD = str(input('Enter the actual word: '))
-
-
 
 
 if guess.upper() == '-VIEWANSWER' :
