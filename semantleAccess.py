@@ -19,6 +19,8 @@ class semantleAccess :
     guessNo = 0
     maxLenGuess = len('Guess ')
 
+
+
     # ================================
     # ||||||   Initialization   ||||||
     # ================================
@@ -28,10 +30,17 @@ class semantleAccess :
         self.TODAYS_WORD  = self.pingSemantle.getCurrentAnswerWord()
         self.TODAYS_JSON  = self.pingSemantle.getTodaysJson()
 
+
+        # TODO : Insert code to get percentiles of different values of the word of the day
+        #        like how it's displayed at the top of semantle.com
+
+
+
     # ===============================
     # ||||||  Program Helpers  ||||||
     # ===============================
-
+        
+    # MATH 
     def cosineSimilarityMath(self, vec1, vec2) -> float:
         return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
@@ -51,6 +60,8 @@ class semantleAccess :
         
         return str(round(decimal * 100, 2)) + '%'
 
+
+    # NOT MATH
     def printPreviousGuesses(self) :
         # establishes which dict to use dep if we want to order by similarity or guess no.
         self.prevCaseToUse = self.previousCasesRanked if self.ORDER_BY_SIMILARITY \
@@ -67,6 +78,7 @@ class semantleAccess :
                         + similarityLen       # similarity size will be this since 
                         + 1) # offset space   # max of percent is 100.00% aka len=7
 
+        # Printing header for previous guesses to match the guess listing width
         print('\n\n',
             ('{0:=<' + str(allColsWidth) + '}').format(''), '\n',
             '|||||', ('{0:^' + str(allColsWidth - 2 * len('|||||') - 2) + '}').format('Previous Guesses'), '|||||', '\n',
@@ -85,15 +97,18 @@ class semantleAccess :
         keys = reversed(sorted(self.prevCaseToUse.keys())) if self.ORDER_BY_SIMILARITY \
                                                            else self.prevCaseToUse.keys()
         
+        # Print valid previous guesses
         for key in keys :
             print(stringFormats['guessNo'].format((str(self.prevCaseToUse[key][0]) + '.')),
                   stringFormats['guess'].format(self.prevCaseToUse[key][3]),
                   self.prevCaseToUse[key][1])
         
+        # Print invalid guesses just to have them them
         for key in self.previousCasesUnknown.keys() :
             print(stringFormats['guessNo'].format((str(self.previousCasesUnknown[key][0]) + '.')),
                   stringFormats['guess'].format(self.previousCasesUnknown[key][3]),
                   self.previousCasesUnknown[key][1])
+
 
     def makeGuess(self, guess : str) -> bool :
         guess = guess.lower()
@@ -111,6 +126,7 @@ class semantleAccess :
 
         thisResult = None
 
+        # -2.0 return means invalid guess since cosinsim range is [-1.0, 1.0]
         if not cosinSim == -2.0 :
             self.guessNo += 1
             thisResult = (self.guessNo, self.decimalToPercentage(cosinSim), cosinSim, guess)
@@ -121,9 +137,11 @@ class semantleAccess :
             self.previousCasesUnknown[guess] = thisResult
 
         self.printPreviousGuesses()
+
         allColsWidth = 10 + 4 + (self.maxLenGuess + (self.maxLenGuess + 1) % 2)
         print(('{0:<' + str(allColsWidth) + '}').format(f'\n\n{thisResult[0]}. {guess}:'), thisResult[1])
 
+        # 100% similarity means it's the right value
         if thisResult[2] == 1.0 :
             print('\n\nYou Win!')
             return True

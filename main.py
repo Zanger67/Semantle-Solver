@@ -13,7 +13,7 @@ print('This program will proceed with the OFFICIAL word of the day unless otherw
 
 sem = semantle.semantleAccess(0)
 
-guess = str(input())
+guess = str(input()).replace(' ', '')
 if guess.upper() == '-EXIT' :
     quit()
 elif guess.upper() == '-ADJUSTDAY' : # pos values for future, neg values for past
@@ -23,7 +23,7 @@ elif guess.upper() == '-ADJUSTDAY' : # pos values for future, neg values for pas
           'Proceed with guessing or enter \'-VIEWANSWER\'\n\n')
     
     sem = semantle.semantleAccess(dayModifier)
-    guess = str(input())
+    guess = str(input()).replace(' ', '')
 
 
 if guess.upper() == '-VIEWANSWER' :
@@ -35,7 +35,7 @@ if guess.upper() == '-VIEWANSWER' :
 while True :
     if (sem.makeGuess(guess)) :
         break
-    guess = str(input('\nEnter your guess: '))
+    guess = str(input('\nEnter your guess: ')).replace(' ', '')
     if guess.lower() == '-exit' :
         break
 
